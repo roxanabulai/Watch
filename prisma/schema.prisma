@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AuctionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  LIVE
+  ENDED
+  PAID
+  CANCELLED
+}
+
+enum NotificationType {
+  BID_PLACED
+  OUTBID
+  WON
+  PAYMENT
+  AUCTION_APPROVED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  role          Role           @default(USER)
+  avatarUrl     String?
+  phone         String?
+  bio           String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  auctions      Auction[]      @relation("SellerAuctions")
+  bids          Bid[]
+  watchlist     Watchlist[]
+  notifications Notification[]
+
+  @@index([role])
+}
+
+model Auction {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  brand           String
+  model           String
+  reference       String?
+  category        String
+  condition       String
+  year            Int?
+  movement        String?
+  caseMaterial    String?
+  bracelet        String?
+  diameterMm      Decimal?      @db.Decimal(5, 2)
+  description     String
+  provenance      String?
+  estimateLow     Int
+  estimateHigh    Int
+  startingBid     Int
+  currentBid      Int           @default(0)
+  bidIncrement    Int           @default(50)
+  reservePrice    Int?
+  proxyMaxBid     Int?
+  proxyBidderId   String?
+  endsAt          DateTime
+  status          AuctionStatus @default(PENDING)
+  stripePaymentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  sellerId        String
+  seller          User          @relation("SellerAuctions", fields: [sellerId], references: [id])
+  images          Image[]
+  bids            Bid[]
+  watchers        Watchlist[]
+
+  @@index([status, endsAt])
+  @@index([category])
+  @@index([brand])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Int
+  maxAmount Int?
+  isProxy   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId, createdAt])
+  @@index([userId])
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId, position])
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, auctionId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
