@@ -3,12 +3,14 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { BidPanel } from "@/components/auction/bid-panel";
 import { ImageGallery } from "@/components/auction/image-gallery";
+import { closeExpiredAuctions } from "@/lib/auction-lifecycle";
 import { prisma } from "@/lib/prisma";
 import { money } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  await closeExpiredAuctions();
   const { id } = await params;
   const auction = await prisma.auction.findUnique({ where: { id }, include: { images: { take: 1 } } });
   if (!auction) return {};
@@ -24,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function AuctionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await closeExpiredAuctions();
   const { id } = await params;
   const auction = await prisma.auction.findUnique({
     where: { id },
@@ -69,7 +72,7 @@ export default async function AuctionDetailPage({ params }: { params: Promise<{ 
           </dl>
         </section>
       </div>
-      <BidPanel auctionId={auction.id} initialBid={auction.currentBid} startingBid={auction.startingBid} increment={auction.bidIncrement} endsAt={auction.endsAt} bids={auction.bids} />
+      <BidPanel auctionId={auction.id} initialBid={auction.currentBid} startingBid={auction.startingBid} increment={auction.bidIncrement} endsAt={auction.endsAt} status={auction.status} bids={auction.bids} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { AuctionStatus, Prisma } from "@prisma/client";
+import { closeExpiredAuctions } from "@/lib/auction-lifecycle";
 import { prisma } from "@/lib/prisma";
 
 export function nextBidMinimum(currentBid: number, startingBid: number, increment: number) {
@@ -6,6 +7,7 @@ export function nextBidMinimum(currentBid: number, startingBid: number, incremen
 }
 
 export async function placeBid(auctionId: string, userId: string, amount: number, maxAmount?: number) {
+  await closeExpiredAuctions();
   return prisma.$transaction(async (tx) => {
     const auction = await tx.auction.findUnique({
       where: { id: auctionId },

@@ -20,6 +20,7 @@ export async function handleSocketBid(payload: unknown, cookieHeader: string) {
         auctionId: parsed.auctionId,
         currentBid: result.auction.currentBid,
         endsAt: result.auction.endsAt,
+        status: result.auction.status,
         bids: result.auction.bids
       }
     };

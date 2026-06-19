@@ -22,6 +22,6 @@ export async function POST(request: NextRequest) {
     response.cookies.set(authCookie(token));
     return response;
   } catch {
-    return NextResponse.json({ error: "Invalid registration details" }, { status: 400 });
+    return NextResponse.json({ error: "Use a valid email, a name of at least 2 characters, and a password of at least 8 characters." }, { status: 400 });
   }
 }

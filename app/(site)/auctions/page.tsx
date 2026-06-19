@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { AuctionGrid } from "@/components/auction/auction-grid";
 import { SearchFilters } from "@/components/auction/search-filters";
 import { Button } from "@/components/ui/button";
+import { closeExpiredAuctions } from "@/lib/auction-lifecycle";
 import { prisma } from "@/lib/prisma";
 
 const pageSize = 12;
@@ -14,6 +15,7 @@ export const metadata = {
 };
 
 export default async function AuctionsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  await closeExpiredAuctions();
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? 1));
   const where: Prisma.AuctionWhereInput = {
