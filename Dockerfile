@@ -20,5 +20,5 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app .
-EXPOSE 3000
+EXPOSE 8080
 CMD ["npm", "run", "start"]
